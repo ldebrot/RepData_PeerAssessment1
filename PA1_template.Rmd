@@ -71,7 +71,7 @@ act_wona_agg_int <-aggregate(x=steps,by=list(interval=interval),FUN=mean)
 detach(act_wona)
 ggplot(act_wona_agg_int) + geom_line(aes(x=act_wona_agg_int$interval,y=act_wona_agg_int$x)) + scale_x_continuous(limits=c(0,2355),breaks=c(0,0600,1200,1800,2355),labels=c("12 am","6 am","12 pm","6 pm","11.55 pm")) + labs(x="Average steps per interval",y="Intervals")
 act_wona_agg_int_maxintval <- max(act_wona_agg_int$x)
-act_wona_agg_int_maxint <- which.max(act_wona_agg_int$x)
+act_wona_agg_int_maxint <- act_wona_agg_int$interval[which.max(act_wona_agg_int$x)]
 ```
 
 The interval with highest average value (`r act_wona_agg_int_maxintval`) is the interval at `r act_wona_agg_int_maxint`

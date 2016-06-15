@@ -81,10 +81,10 @@ ggplot(act_wona_agg_int) + geom_line(aes(x=act_wona_agg_int$interval,y=act_wona_
 
 ```r
 act_wona_agg_int_maxintval <- max(act_wona_agg_int$x)
-act_wona_agg_int_maxint <- which.max(act_wona_agg_int$x)
+act_wona_agg_int_maxint <- act_wona_agg_int$interval[which.max(act_wona_agg_int$x)]
 ```
 
-The interval with highest average value (206.1698113) is the interval at 104
+The interval with highest average value (206.1698113) is the interval at 835
 
 ## Imputing missing values
 
@@ -136,7 +136,10 @@ attach(act_narep)
 act_narep_agg_date <- aggregate(x=steps,by=list(date=date),FUN=sum)
 act_narep_agg_int <-aggregate(x=steps,by=list(interval=interval),FUN=mean) #this is for further use
 detach(act_narep)
+hist(act_narep_agg_date$x, xlab = "total number of steps", main ="Total number of steps per day (imputed NA values)")
 ```
+
+![](PA1_template_files/figure-html/unnamed-chunk-13-1.png)<!-- -->
 
 Now let us have a look at the difference in mean and median values between the dataset with deleted NA values and the one with imputed NA values
 

@@ -121,6 +121,7 @@ attach(act_narep)
 act_narep_agg_date <- aggregate(x=steps,by=list(date=date),FUN=sum)
 act_narep_agg_int <-aggregate(x=steps,by=list(interval=interval),FUN=mean) #this is for further use
 detach(act_narep)
+hist(act_narep_agg_date$x, xlab = "total number of steps", main ="Total number of steps per day (imputed NA values)")
 ```
 
 Now let us have a look at the difference in mean and median values between the dataset with deleted NA values and the one with imputed NA values

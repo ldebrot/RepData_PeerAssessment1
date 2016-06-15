@@ -8,13 +8,6 @@ list.of.packages <- c("ggplot2","gridExtra")
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)) install.packages(new.packages)
 library(ggplot2)
-```
-
-```
-## Warning: package 'ggplot2' was built under R version 3.2.4
-```
-
-```r
 par(mfrow=c(1,1))
 ```
 
@@ -95,11 +88,6 @@ The interval with highest average value (206.1698113) is the interval at 104
 
 ## Imputing missing values
 
-Before we start here. Let us enumerate the different versions of the dataset we are about to create. There will be three datasets :
-- the initial datasets, containing NA values
-- a dataset without NA values (deleted)
-- a dataset with imputed NA values (NA values replaced by mean values per interval)
-
 Calculate the number of missing values.
 
 
@@ -135,7 +123,7 @@ for (i in as.integer(row.names(act_withna[which(is.na(act_withna$steps)==TRUE),]
 }
 ```
 
-Calculate total number of steps per day by using the newly created dataset with imputed NA values (NA measurements replaced by mean values).
+Calculate total number of steps per day by using the newly created dataset with NA values replaced by mean values (activity without NA values - actwona).
 
 
 ```r
@@ -145,9 +133,9 @@ act_narep_agg_int <-aggregate(x=steps,by=list(interval=interval),FUN=mean) #this
 detach(act_narep)
 ```
 
-Now let us have a look at the difference in mean and median values between the dataset with deleted NA values and the one with imputed NA values
+Now let us have a look at the difference of mean and median values between the data set with deleted NA values and the one with replaced NA values
 
-First, calculate mean and median values of the dataset with imputed NA values.
+First, calculate mean and median values of the new data set, containing imputed NA values.
 
 
 ```r
@@ -155,7 +143,7 @@ act_narep_agg_date_mean <- mean(act_narep_agg_date$x)
 act_narep_agg_date_median <- median(act_narep_agg_date$x)
 ```
 
-Then, let us compare those numbers with the ones of the dataset without NA values (deleted) :
+Then, let us compare those numbers with the ones of the initial dataset (with deleted NA values) :
 
 
 ```r
@@ -168,25 +156,16 @@ colnames(comparison_median)<-c("dataset","value")
 plot1 <- qplot(x=comparison_mean$dataset,y=comparison_mean$value,main="Difference between daily mean values",xlab="daily mean",ylab="dataset")+theme(panel.background = element_rect(fill = '#ccffff', colour = '#3399ff'))
 plot2 <- qplot(x=comparison_median$dataset,y=comparison_median$value,main="Difference between daily median values",xlab="daily median",ylab="dataset")+theme(panel.background = element_rect(fill = '#ffffcc', colour = '#cc9900'))
 library(gridExtra)
-```
-
-```
-## Warning: package 'gridExtra' was built under R version 3.2.4
-```
-
-```r
 grid.arrange(plot1, plot2, nrow=2, ncol=1)
 ```
 
 ![](PA1_template_files/figure-html/unnamed-chunk-15-1.png)<!-- -->
 
-The two plots above show no significant difference in mean and median values.
+However the total number of steps is clearly higher in the dataset with imputed NA values (6.5673751\times 10^{5}) than in the initial dataset (570608).
 
-However, the total number of steps is clearly higher in the dataset with imputed NA values (656737) than in the dataset without NA values (570608).
 
-So, how can we explain the (almost) identical mean and median values between the datasets despite the big difference in total steps measured?
 
-Is there an interval which "hides" the difference? Which interval could it be?
+The difference between mean per interval is none :
 
 
 ```r
@@ -200,7 +179,11 @@ ggplot(comparison_int,aes(x=comparison_int$interval,y=comparison_int$difference)
 
 ![](PA1_template_files/figure-html/unnamed-chunk-16-1.png)<!-- -->
 
-The plot above clearly shows no difference in mean values per interval. Consequently, let us have a look at the differences in total steps per date between the datasets.
+
+
+
+
+The 
 
 
 ```r
@@ -214,48 +197,31 @@ ggplot(comparison,aes(x=comparison$date,y=comparison$difference))+geom_bar(stat=
 
 ![](PA1_template_files/figure-html/unnamed-chunk-17-1.png)<!-- -->
 
-The plot above clearly indicates substantial differences between the datasets, but only at certain dates.
+##set date pattern side by side
+act_narep_agg_date$set <- rep("Replaced NAs",length(dim(act_narep_agg_date)[1]))
+act_wona_agg_date$set <- rep("Initial Values",length(dim(act_wona_agg_date)[1]))
+comparison <- rbind(act_narep_agg_date,act_wona_agg_date)
+comparison <- comparison[order(comparison$date),]
+ggplot(comparison,aes(x=comparison$date,y=comparison$x))+geom_bar(stat="identity",aes(fill=comparison$set),position="dodge")
 
-While having a closer look at the initial dataset (containing NA values), we can see that at certain dates only NA values have been measured. At these dates, not a single valid measurement was made.
+##set date pattern line&ribbon presentation
+act_narep_agg_date$set <- rep("Replaced NAs",length(dim(act_narep_agg_date)[1]))
+act_wona_agg_date$set <- rep("Initial Values",length(dim(act_wona_agg_date)[1]))
+comparison <- rbind(act_narep_agg_date,act_wona_agg_date)
+comparison <- comparison[order(comparison$date),]
+ggplot(comparison, aes(Date,DailyTotal, group = as.factor(Set))) + geom_line(aes(colour=Set))+geom_ribbon(aes(ymin=comparison$DailyTotal,ymax=comparison$DailyTotal),fill="blue")
 
-Therefore, there is almost no difference between the average daily means and medians because all the values of these dates were replaced by mean values.
+ggplot(comparison, aes(Date,DailyTotal, group = as.factor(Set))) + geom_line(aes(colour=Set))
 
-When calculating the mean value, the increase in total steps due to imputation is compensated by the higher number of days. Thus, no difference there.
 
 ## Are there differences in activity patterns between weekdays and weekends?
 
-First of all, we need to create a weekday/weekend factor variable based on the date. 
 
 
-```r
-weekdays1 <- c('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday','Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi')
-act_narep$daytype <- factor(weekdays(strptime(as.character(act_narep$date),"%Y-%m-%d")) %in% weekdays1,levels=c(FALSE, TRUE), labels=c('weekend', 'weekday'))
+Date variable is saved as a factor, to be converted into date variable
 
-#Let us prepare two datasets, one containing weekday data, the other weekend data 
-act_narep_weekdays <- subset(act_narep,act_narep$daytype=="weekday")
-act_narep_weekends <- subset(act_narep,act_narep$daytype=="weekend")
+#```{r}
+#act_wona$date_factor <- strptime(as.character(act_wona$date),"%Y-%m-%d")
+#act_withna$date_factor <- strptime(as.character(act_withna$date),"%Y-%m-%d")
+#```
 
-#Process weekday data
-attach(act_narep_weekdays)
-act_narep_weekdays_agg_int <-aggregate(x=steps,by=list(interval=interval),FUN=mean) #this is for further use
-detach(act_narep_weekdays)
-
-#Process weekend data
-attach(act_narep_weekends)
-act_narep_weekends_agg_int <-aggregate(x=steps,by=list(interval=interval),FUN=mean) #this is for further use
-detach(act_narep_weekends)
-
-#Produce the plots
-plot1 <- ggplot(act_narep_weekdays_agg_int,aes(x=act_narep_weekdays_agg_int$interval,y=act_narep_weekdays_agg_int$x))+geom_line(stat="identity",position="stack",colour="#66ccff")+labs(x = "Intervals", y = "Mean steps per interval",title="Mean steps per interval on weekdays")+scale_x_continuous(limits = c(0,2355),breaks=c(0,0600,1200,1800,2355),labels =c("12 am","6 am","12 pm","6 pm","11.55 pm"))+ylim(c(min(act_narep_weekdays_agg_int$x),max(act_narep_weekdays_agg_int$x)))+geom_hline(yintercept = mean(act_narep_weekdays_agg_int$x),colour="blue")
-plot2 <- ggplot(act_narep_weekends_agg_int,aes(x=act_narep_weekends_agg_int$interval,y=act_narep_weekends_agg_int$x))+geom_line(stat="identity",position="stack",colour="#66ccff")+labs(x = "Intervals", y = "Mean steps per interval",title="Mean steps per interval on weekends")+scale_x_continuous(limits = c(0,2355),breaks=c(0,0600,1200,1800,2355),labels =c("12 am","6 am","12 pm","6 pm","11.55 pm"))+ylim(c(min(act_narep_weekdays_agg_int$x),max(act_narep_weekdays_agg_int$x)))+geom_hline(yintercept = mean(act_narep_weekends_agg_int$x),colour="blue")
-
-grid.arrange(plot1, plot2, nrow=2, ncol=1)
-```
-
-![](PA1_template_files/figure-html/unnamed-chunk-18-1.png)<!-- -->
-
-As shown by the two plots above, there are strong differences between the daily activity pattern, among which are the following:
-- high activity in the early morning on weekdays
-- more even pattern on weekends
-- slightly higher activity during weekends
-- activties start later on weekends.
